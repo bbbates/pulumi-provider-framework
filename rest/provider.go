@@ -56,6 +56,10 @@ type Provider struct {
 	httpClient *http.Client
 	openAPIDoc openapi3.T
 	schema     pschema.PackageSpec
+
+	// Global path params for this provider - for path params that are fixed
+	// for a provider. Can be configured during the OnConfigure callback func
+	globalPathParams map[string]string
 }
 
 func defaultTransportDialContext(dialer *net.Dialer) func(context.Context, string, string) (net.Conn, error) {
@@ -114,6 +118,7 @@ func MakeProvider(host *provider.HostClient, name, version string, pulumiSchemaB
 		httpClient: httpClient,
 
 		providerCallback: callback,
+		globalPathParams: make(map[string]string), // initially an empty set
 	}, nil
 }
 
@@ -980,4 +985,10 @@ func (p *Provider) GetHTTPClient() *http.Client {
 
 func (p *Provider) GetMapping(_ context.Context, _ *pulumirpc.GetMappingRequest) (*pulumirpc.GetMappingResponse, error) {
 	return &pulumirpc.GetMappingResponse{}, nil
+}
+
+func (p *Provider) GetGlobalPathParams() map[string]string { return p.globalPathParams }
+
+func (p *Provider) GetMetadata() providerGen.ProviderMetadata {
+	return p.metadata
 }
